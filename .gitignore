@@ -1,31 +1,4 @@
-venv/
-myenv/
-.venv/
-env/
-.venv/# Virtual environment
-venv/
-env/
-.venv/
-
-# Python byte-compiled files
-__pycache__/
-*.py[cod]
-
-# Distribution / packaging
-dist/
-build/
-*.egg-info/
-
-# IDE-specific files
-.vscode/
-.idea/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Environment variables
-.env
-
-# Operating system files
-.DS_Store
-Thumbs.db
+ venv/
+   __pycache__/
+   *.pyc
+   .env

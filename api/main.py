@@ -31,7 +31,13 @@ class JobDescription(BaseModel):
 class EmailRequest(BaseModel):
     job_description: str
     template_name: str = "job_application"
-    # Removed language field
+    user_company: str = ""
+    recipient_name: str = ""
+    user_name: str = ""
+    user_position: str = ""
+    education_level: str = ""
+    university: str = ""
+    field_of_study: str = ""
 
 @app.post("/scrape_job")
 async def scrape_job(job_url: JobURL):
@@ -45,7 +51,15 @@ async def generate_email_api(request: EmailRequest):
     email = generate_email(
         request.job_description,
         template_name=request.template_name,
-        portfolio_links=portfolio_links
+        portfolio_links=portfolio_links if request.template_name == "business_outreach" else "",
+        company=request.user_company,
+        recipient_name=request.recipient_name,
+        user_name=request.user_name,
+        user_position=request.user_position,
+        user_company=request.user_company,
+        education_level=request.education_level,
+        university=request.university,
+        field_of_study=request.field_of_study
     )
     return {"email": email}
 

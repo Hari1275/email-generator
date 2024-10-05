@@ -1,33 +1,42 @@
 templates = {
     "job_application": """
-    Dear Hiring Manager,
+Dear {recipient_name},
 
-    {custom_intro}
+{custom_intro}
 
-    {job_specific_skills}
+I am excited to apply for the {role} position at {company}. {relevant_experience}
 
-    Here are some relevant projects from my portfolio:
-    {portfolio_links}
+Key skills relevant to this position:
+{job_specific_skills}
 
-    Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.
+{company_specific_interest}
 
-    Best regards,
-    [Your Name]
+Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to {company}'s success.
+
+{email_signoff}
+{contact_info}
     """,
     "business_outreach": """
-    Dear {recipient_name},
+Dear {recipient_name},
 
-    I hope this email finds you well. I recently came across {company} and was impressed by your work in {industry}. {custom_intro}
+{custom_intro}
 
-    {service_offering}
+At {user_company}, we specialize in {your_services}. Our approach has consistently delivered:
+{value_proposition}
 
-    Here are some relevant projects from my portfolio that demonstrate our expertise:
-    {portfolio_links}
+{case_study}
 
-    I would love the opportunity to discuss how we can collaborate. Would you be available for a brief call next week?
+I believe {company} could benefit from our services in the following way:
+{potential_benefit}
 
-    Best regards,
-    [Your Name]
+{portfolio_section}
+
+Would you be available for a brief 15-minute call next week to discuss how we can tailor our solutions to your specific needs?
+
+Thank you for your time. I look forward to the possibility of collaborating with {company}.
+
+{email_signoff}
+{contact_info}
     """
 }
 
@@ -35,4 +44,24 @@ def generate_custom_email(template_name, **kwargs):
     template = templates.get(template_name)
     if not template:
         raise ValueError("Template not found")
+    
+    # Remove empty values
+    kwargs = {k: v for k, v in kwargs.items() if v}
+    
+    # Set default values only if they're not provided
+    defaults = {
+        'user_name': 'Applicant',
+        'user_position': 'Job Seeker',
+        'user_company': 'Current Company',
+        'recipient_name': 'Hiring Manager',
+        'portfolio_section': '',
+        'email_signoff': 'Best regards,',
+        'contact_info': ''
+    }
+    
+    # Update kwargs with defaults for missing values
+    for key, value in defaults.items():
+        if key not in kwargs:
+            kwargs[key] = value
+    
     return template.format(**kwargs)

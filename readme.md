@@ -36,6 +36,9 @@ Output: API endpoints for scraping job listings and generating emails.
 
 ### Phase 2: Advanced Features and Portfolio Matching
 
+2.0
+Task: Job Seekers can generate personalized emails to apply for jobs with minimal effort.
+Business Executives can automate outreach with targeted, customized emails to prospective clients, including relevant portfolio links.
 2.1 Portfolio Matching using Pinecone
 Task: Set up vector database to match job descriptions with relevant portfolio links.
 Tools: Pinecone, LangChain.
@@ -46,11 +49,6 @@ Task: Offer predefined email templates for different job roles and industries.
 Tools: HTML/CSS templates.
 Description: Provide a selection of predefined templates that can be filled in with personalized content from the AI model.
 Output: Dynamic templates for various job types.
-2.3 Multilingual Email Generation
-Task: Support email generation in multiple languages.
-Tools: LLaMA 3.1 (multilingual version).
-Description: Train or fine-tune the AI model to generate emails in different languages based on the target region.
-Output: Multilingual support for generated emails.
 
 ### Phase 3: Optimization and Scaling
 
@@ -78,7 +76,7 @@ Technology Stack
 Next.js 14: For building the frontend UI.
 NextAuth.js: User authentication and session management.
 Chart.js: For analytics and reporting.
-TailwindCSS: For responsive and clean UI design.
+ShadcnUI: For responsive and clean UI design.
 
 ### Development Phases
 
@@ -89,16 +87,29 @@ Task: Build a form for users to input the company’s careers page URL and user 
 Tools: Next.js 14, TailwindCSS.
 Description: Create a simple form with data validation and handle state using React hooks or Next.js state management.
 Output: Functional UI for input collection.
-1.2 Data Display and Email Preview
-Task: Display the scraped job listings and show a preview of the generated cold email.
-Tools: Next.js dynamic rendering, TailwindCSS for styling.
-Description: Create a display section to show job listings from the scraped data and dynamically generate an email preview based on job descriptions.
-Output: Real-time email preview and job listing view.
-1.3 API Integration
-Task: Connect frontend to the backend API for job scraping and email generation.
-Tools: Axios or Fetch API.
-Description: Set up API calls to the backend (Python/Streamlit) to fetch job listings and generated emails.
-Output: Seamless communication between frontend and backend, with dynamic data flow.
+1.0 To further enhance this functionality and make it more user-friendly, you could:
+
+1. Create separate UI flows for job seekers and business executives in your frontend application.
+   For job seekers:
+   Allow them to input a job listing URL or paste a job description.
+   Use the scraper to extract job details if a URL is provided.
+   Generate a personalized email using the job_application template.
+   For business executives:
+   Allow them to input details about the target company and industry.
+   Use the business_outreach template for email generation.
+   Incorporate the portfolio matching to include relevant project links.
+   Implement a user-friendly interface for both user types to review and edit the generated emails before sending or saving them.
+   Add a feature to save generated emails and track outreach efforts.
+   1.2 Data Display and Email Preview
+   Task: Display the scraped job listings and show a preview of the generated cold email.
+   Tools: Next.js dynamic rendering, ShadcnUI for styling.
+   Description: Create a display section to show job listings from the scraped data and dynamically generate an email preview based on job descriptions.
+   Output: Real-time email preview and job listing view.
+   1.3 API Integration
+   Task: Connect frontend to the backend API for job scraping and email generation.
+   Tools: Axios or Fetch API.
+   Description: Set up API calls to the backend (Python/Streamlit) to fetch job listings and generated emails.
+   Output: Seamless communication between frontend and backend, with dynamic data flow.
 
 ### Phase 2: Advanced Features and Enhancements
 

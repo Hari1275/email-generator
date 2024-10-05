@@ -6,3 +6,7 @@ requests
 langchain-groq
 fastapi
 uvicorn
+pinecone-client==3.0.0
+sentence-transformers
+scikit-learn
+numpy

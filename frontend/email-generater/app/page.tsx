@@ -14,6 +14,7 @@ import {
 import React from 'react';
 import { Loader2, Copy, Check } from 'lucide-react';
 import copy from 'clipboard-copy';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface JobListing {
   Title: string;
@@ -42,6 +43,10 @@ export default function Home() {
   const [includePortfolio, setIncludePortfolio] = useState(true);
   const [includeExperiences, setIncludeExperiences] = useState(true);
   const [emphasisPoints, setEmphasisPoints] = useState<string[]>([]);
+
+  // New state for saved jobs
+  const [savedJobs, setSavedJobs] = useState<JobListing[]>([]);
+  const [jobsToCompare, setJobsToCompare] = useState<JobListing[]>([]);
 
   const handleScrapeJobs = async () => {
     setIsScrapingJobs(true);
@@ -98,6 +103,31 @@ export default function Home() {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     }
+  };
+
+  const handleSaveJob = (job: JobListing) => {
+    setSavedJobs((prevSavedJobs) => {
+      if (!prevSavedJobs.some((savedJob) => savedJob.Title === job.Title)) {
+        return [...prevSavedJobs, job];
+      }
+      return prevSavedJobs;
+    });
+  };
+
+  const handleRemoveSavedJob = (job: JobListing) => {
+    setSavedJobs((prevSavedJobs) =>
+      prevSavedJobs.filter((savedJob) => savedJob.Title !== job.Title)
+    );
+  };
+
+  const addToComparison = (job: JobListing) => {
+    if (jobsToCompare.length < 2) {
+      setJobsToCompare([...jobsToCompare, job]);
+    }
+  };
+
+  const removeFromComparison = (job: JobListing) => {
+    setJobsToCompare(jobsToCompare.filter((j) => j.Title !== job.Title));
   };
 
   const CustomizationOptions = () => (
@@ -170,6 +200,76 @@ export default function Home() {
     </Card>
   );
 
+  const SavedJobsTab = () => (
+    <Card className='mb-4'>
+      <CardHeader>
+        <CardTitle>Saved Job Listings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {savedJobs.length === 0 ? (
+          <p>No saved jobs yet.</p>
+        ) : (
+          <ul>
+            {savedJobs.map((job, index) => (
+              <li
+                key={index}
+                className='mb-2 flex justify-between items-center'
+              >
+                <Button variant='outline' onClick={() => setSelectedJob(job)}>
+                  {job.Title}
+                </Button>
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  onClick={() => handleRemoveSavedJob(job)}
+                >
+                  Remove
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const JobComparison = () => (
+    <Card className='mb-4'>
+      <CardHeader>
+        <CardTitle>Job Comparison</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {jobsToCompare.length === 0 ? (
+          <p>Select jobs to compare (max 2)</p>
+        ) : (
+          <div className='grid grid-cols-2 gap-4'>
+            {jobsToCompare.map((job, index) => (
+              <div key={index} className='border p-4 rounded'>
+                <h3 className='font-bold'>{job.Title}</h3>
+                <p>
+                  <strong>Company:</strong> {job.Company}
+                </p>
+                <p>
+                  <strong>Location:</strong> {job.Location}
+                </p>
+                <p>
+                  <strong>Employment Type:</strong> {job['Employment Type']}
+                </p>
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  onClick={() => removeFromComparison(job)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <main className='container mx-auto p-4'>
       <h1 className='text-3xl font-bold mb-4'>Cold Email Generator SaaS</h1>
@@ -200,24 +300,50 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      {jobListings.length > 0 && (
-        <Card className='mb-4'>
-          <CardHeader>
-            <CardTitle>Job Listings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul>
-              {jobListings.map((job, index) => (
-                <li key={index} className='mb-2'>
-                  <Button variant='outline' onClick={() => setSelectedJob(job)}>
-                    {job.Title}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <Tabs defaultValue='jobListings' className='mb-4'>
+        <TabsList>
+          <TabsTrigger value='jobListings'>Job Listings</TabsTrigger>
+          <TabsTrigger value='savedJobs'>Saved Jobs</TabsTrigger>
+        </TabsList>
+        <TabsContent value='jobListings'>
+          {jobListings.length > 0 && (
+            <Card className='mb-4'>
+              <CardHeader>
+                <CardTitle>Job Listings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul>
+                  {jobListings.map((job, index) => (
+                    <li
+                      key={index}
+                      className='mb-2 flex justify-between items-center'
+                    >
+                      <Button
+                        variant='outline'
+                        onClick={() => setSelectedJob(job)}
+                      >
+                        {job.Title}
+                      </Button>
+                      <Button
+                        variant='secondary'
+                        size='sm'
+                        onClick={() => handleSaveJob(job)}
+                      >
+                        Save
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value='savedJobs'>
+          <SavedJobsTab />
+        </TabsContent>
+      </Tabs>
+
+      <JobComparison />
 
       {selectedJob && (
         <>
@@ -255,6 +381,15 @@ export default function Home() {
                   </ul>
                 </div>
               </div>
+              <Button
+                variant='secondary'
+                size='sm'
+                onClick={() => addToComparison(selectedJob)}
+                disabled={jobsToCompare.length >= 2}
+                className='mt-4'
+              >
+                Add to Comparison
+              </Button>
             </CardContent>
           </Card>
           <CustomizationOptions />

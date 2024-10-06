@@ -59,10 +59,6 @@ async def generate_email_api(request: EmailRequest):
         logger.error(f"Error generating email: {str(e)}")
         raise HTTPException(status_code=500, detail="Error generating email")
 
-def run_fastapi():
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
 def streamlit_ui():
     st.title("Cold Email Generator API")
     endpoint = st.sidebar.selectbox("Select Endpoint", ["Scrape Job", "Generate Email"])
@@ -109,8 +105,4 @@ def generate_email_ui():
         else:
             st.error("Please enter a job description")
 
-if __name__ == "__main__":
-    import threading
-    fastapi_thread = threading.Thread(target=run_fastapi)
-    fastapi_thread.start()
-    streamlit_ui()
+app = app

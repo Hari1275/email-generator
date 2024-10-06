@@ -109,20 +109,27 @@ def get_company_info(company_name):
     return f"{company_name} is a company operating in its industry. " \
            f"They are known for their products or services and are committed to delivering value to their customers."
 
-def generate_email(job_description, template_name="job_application"):
+def generate_email(job_description, template_name="job_application", **kwargs):
     job_data = eval(job_description)
     company_name = job_data.get('Company', 'the company')
     matched_projects = match_job_to_portfolio(job_data['Description'])
     portfolio_links = "\n".join([f"- {url}" for url in matched_projects[:3]])
-    print(company_name)
+    
     # Get additional company info
     company_info = get_company_info(company_name)
-    print(company_info)
+    print('Company Info:', company_info[:200])
+
+    # Extract customization options
+    email_tone = kwargs.get('email_tone', 'professional')
+    email_length = kwargs.get('email_length', 'medium')
+    include_portfolio = kwargs.get('include_portfolio', True)
+    include_experiences = kwargs.get('include_experiences', True)
+    emphasis_points = kwargs.get('emphasis_points', [])
 
     if template_name == "job_application":
         prompt = PromptTemplate.from_template(
             """
-            Write a concise and attractive cold job application email for the {role} position at {company}. 
+            Write a {tone} and {length} cold job application email for the {role} position at {company}. 
             Use this additional information about the company to personalize the email: {company_info}
             The email should:
             1. Start with an attention-grabbing opening related to the company or industry, using the provided company info
@@ -130,6 +137,11 @@ def generate_email(job_description, template_name="job_application"):
             3. Highlight 2-3 key skills or experiences relevant to the job, with brief examples
             4. Express interest in an interview, suggesting a specific time (e.g., "next Tuesday at 2 PM")
             5. Close with a clear call-to-action
+            
+            {portfolio_instruction}
+            {experiences_instruction}
+            {emphasis_instruction}
+            
             Keep the email under 200 words, use short paragraphs, and make it engaging and conversational.
             ### EMAIL (NO GREETING OR SIGNATURE):
             """
@@ -137,7 +149,7 @@ def generate_email(job_description, template_name="job_application"):
     elif template_name == "business_outreach":
         prompt = PromptTemplate.from_template(
             """
-            Write a concise and attractive business outreach email to {company} regarding their {role} position. 
+            Write a {tone} and {length} business outreach email to {company} regarding their {role} position. 
             Use this additional information about the company to personalize the email: {company_info}
             The email should:
             1. Start with an attention-grabbing opening related to the company's hiring needs or industry challenges, using the provided company info
@@ -146,6 +158,11 @@ def generate_email(job_description, template_name="job_application"):
             4. Suggest a specific time for a brief call (e.g., "this Thursday at 11 AM") to discuss how TalentSync can help with their hiring needs
             5. Include the following portfolio links of successful placements: {portfolio_links}
             6. Close with a clear call-to-action
+            
+            {portfolio_instruction}
+            {experiences_instruction}
+            {emphasis_instruction}
+            
             Keep the email under 200 words, use short paragraphs, and make it engaging and conversational.
             ### EMAIL (NO GREETING OR SIGNATURE):
             """
@@ -157,8 +174,13 @@ def generate_email(job_description, template_name="job_application"):
     email_content = chain.invoke({
         "role": job_data['Title'],
         "company": company_name,
-        "portfolio_links": portfolio_links,
-        "company_info": company_info
+        "portfolio_links": portfolio_links if include_portfolio else "",
+        "company_info": company_info,
+        "tone": email_tone,
+        "length": email_length,
+        "portfolio_instruction": "Include portfolio links." if include_portfolio else "Do not include portfolio links.",
+        "experiences_instruction": "Include specific experiences." if include_experiences else "Do not include specific experiences.",
+        "emphasis_instruction": f"Emphasize the following points: {', '.join(emphasis_points)}" if emphasis_points else ""
     })
 
     cleaned_content = clean_content(str(email_content))

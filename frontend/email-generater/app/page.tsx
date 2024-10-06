@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import React from 'react';
-import { Loader2, Copy, Check } from 'lucide-react'; // Import Copy and Check icons
+import { Loader2, Copy, Check } from 'lucide-react';
 import copy from 'clipboard-copy';
 
 interface JobListing {
@@ -26,26 +26,22 @@ interface JobListing {
   Company: string;
 }
 
-interface RawJobData {
-  role: string;
-  location: string;
-  employment_type: string;
-  experience: string;
-  skills: string;
-  responsibilities: string[];
-  description: string;
-}
-
 export default function Home() {
   const [url, setUrl] = useState('');
   const [jobListings, setJobListings] = useState<JobListing[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
   const [generatedEmail, setGeneratedEmail] = useState('');
   const [emailType, setEmailType] = useState('job_application');
-  const [rawJobData, setRawJobData] = useState<RawJobData | null>(null);
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+
+  // New state variables for customization options
+  const [emailTone, setEmailTone] = useState('professional');
+  const [emailLength, setEmailLength] = useState('medium');
+  const [includePortfolio, setIncludePortfolio] = useState(true);
+  const [includeExperiences, setIncludeExperiences] = useState(true);
+  const [emphasisPoints, setEmphasisPoints] = useState<string[]>([]);
 
   const handleScrapeJobs = async () => {
     setIsScrapingJobs(true);
@@ -57,19 +53,10 @@ export default function Home() {
       });
       const data = await response.json();
       console.log('Scraped job data:', data);
-      if (Array.isArray(data)) {
-        setJobListings(data);
-      } else if (data.jobs && Array.isArray(data.jobs)) {
-        setJobListings(data.jobs);
-      } else {
-        console.error('Unexpected data structure:', data);
-        setJobListings([]);
-      }
-      setRawJobData(data.raw_data || null);
+      setJobListings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error scraping jobs:', error);
       setJobListings([]);
-      setRawJobData(null);
     } finally {
       setIsScrapingJobs(false);
     }
@@ -85,6 +72,11 @@ export default function Home() {
         body: JSON.stringify({
           job_description: JSON.stringify(selectedJob),
           template_name: emailType,
+          email_tone: emailTone,
+          email_length: emailLength,
+          include_portfolio: includePortfolio,
+          include_experiences: includeExperiences,
+          emphasis_points: emphasisPoints,
         }),
       });
       if (!response.ok) {
@@ -107,6 +99,76 @@ export default function Home() {
       setTimeout(() => setIsCopied(false), 2000);
     }
   };
+
+  const CustomizationOptions = () => (
+    <Card className='mb-4'>
+      <CardHeader>
+        <CardTitle>Email Customization Options</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className='space-y-4'>
+          <div>
+            <label>Tone:</label>
+            <Select value={emailTone} onValueChange={setEmailTone}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select tone' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='professional'>Professional</SelectItem>
+                <SelectItem value='friendly'>Friendly</SelectItem>
+                <SelectItem value='enthusiastic'>Enthusiastic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label>Length:</label>
+            <Select value={emailLength} onValueChange={setEmailLength}>
+              <SelectTrigger>
+                <SelectValue placeholder='Select length' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='short'>Short</SelectItem>
+                <SelectItem value='medium'>Medium</SelectItem>
+                <SelectItem value='long'>Long</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label>
+              <input
+                type='checkbox'
+                checked={includePortfolio}
+                onChange={(e) => setIncludePortfolio(e.target.checked)}
+              />
+              Include Portfolio Links
+            </label>
+          </div>
+          <div>
+            <label>
+              <input
+                type='checkbox'
+                checked={includeExperiences}
+                onChange={(e) => setIncludeExperiences(e.target.checked)}
+              />
+              Include Specific Experiences
+            </label>
+          </div>
+          <div>
+            <label>Emphasis Points:</label>
+            <Input
+              placeholder='Enter emphasis points (comma-separated)'
+              value={emphasisPoints.join(', ')}
+              onChange={(e) =>
+                setEmphasisPoints(
+                  e.target.value.split(',').map((point) => point.trim())
+                )
+              }
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <main className='container mx-auto p-4'>
@@ -158,114 +220,117 @@ export default function Home() {
       )}
 
       {selectedJob && (
-        <Card className='mb-4'>
-          <CardHeader>
-            <CardTitle>{selectedJob.Title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-2'>
-              <p>
-                <strong>Location:</strong> {selectedJob.Location}
-              </p>
-              <p>
-                <strong>Employment Type:</strong>{' '}
-                {selectedJob['Employment Type']}
-              </p>
-              <p>
-                <strong>Experience:</strong> {selectedJob.Experience}
-              </p>
-              <p>
-                <strong>Skills:</strong> {selectedJob.Skills}
-              </p>
-              <p>
-                <strong>Description:</strong> {selectedJob.Description}
-              </p>
-              <div>
-                <strong>Responsibilities:</strong>
-                <ul className='list-disc pl-5 mt-2'>
-                  {selectedJob.Responsibilities.map((resp, index) => (
-                    <li key={index}>{resp}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {selectedJob && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Generate Email for: {selectedJob.Title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-4'>
-              <Select
-                value={emailType}
-                onValueChange={(value) => setEmailType(value)}
-              >
-                <SelectTrigger className='w-full'>
-                  <SelectValue placeholder='Select email type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='job_application'>
-                    Job Application
-                  </SelectItem>
-                  <SelectItem value='business_outreach'>
-                    Business Outreach
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleGenerateEmail}
-                disabled={isGeneratingEmail}
-                className='mt-4'
-              >
-                {isGeneratingEmail ? (
-                  <>
-                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Generating Email...
-                  </>
-                ) : (
-                  'Generate Email'
-                )}
-              </Button>
-            </div>
-            {generatedEmail && (
-              <div className='mt-4'>
-                <div className='flex justify-between items-center'>
-                  <h3 className='text-lg font-semibold'>Generated Email:</h3>
-                  <Button
-                    onClick={handleCopyEmail}
-                    variant='outline'
-                    size='sm'
-                    className='ml-2'
-                  >
-                    {isCopied ? (
-                      <>
-                        <Check className='mr-2 h-4 w-4' />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className='mr-2 h-4 w-4' />
-                        Copy
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <div className='bg-gray-100 p-4 rounded mt-2 whitespace-pre-wrap font-mono text-sm'>
-                  {generatedEmail.split('\n').map((line, index) => (
-                    <React.Fragment key={index}>
-                      {line}
-                      <br />
-                    </React.Fragment>
-                  ))}
+        <>
+          <Card className='mb-4'>
+            <CardHeader>
+              <CardTitle>{selectedJob.Title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-2'>
+                <p>
+                  <strong>Company:</strong> {selectedJob.Company}
+                </p>
+                <p>
+                  <strong>Location:</strong> {selectedJob.Location}
+                </p>
+                <p>
+                  <strong>Employment Type:</strong>{' '}
+                  {selectedJob['Employment Type']}
+                </p>
+                <p>
+                  <strong>Experience:</strong> {selectedJob.Experience}
+                </p>
+                <p>
+                  <strong>Skills:</strong> {selectedJob.Skills}
+                </p>
+                <p>
+                  <strong>Description:</strong> {selectedJob.Description}
+                </p>
+                <div>
+                  <strong>Responsibilities:</strong>
+                  <ul className='list-disc pl-5 mt-2'>
+                    {selectedJob.Responsibilities.map((resp, index) => (
+                      <li key={index}>{resp}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          <CustomizationOptions />
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Email for: {selectedJob.Title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className='space-y-4'>
+                <Select
+                  value={emailType}
+                  onValueChange={(value) => setEmailType(value)}
+                >
+                  <SelectTrigger className='w-full'>
+                    <SelectValue placeholder='Select email type' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='job_application'>
+                      Job Application
+                    </SelectItem>
+                    <SelectItem value='business_outreach'>
+                      Business Outreach
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleGenerateEmail}
+                  disabled={isGeneratingEmail}
+                  className='mt-4'
+                >
+                  {isGeneratingEmail ? (
+                    <>
+                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                      Generating Email...
+                    </>
+                  ) : (
+                    'Generate Email'
+                  )}
+                </Button>
+              </div>
+              {generatedEmail && (
+                <div className='mt-4'>
+                  <div className='flex justify-between items-center'>
+                    <h3 className='text-lg font-semibold'>Generated Email:</h3>
+                    <Button
+                      onClick={handleCopyEmail}
+                      variant='outline'
+                      size='sm'
+                      className='ml-2'
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className='mr-2 h-4 w-4' />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className='mr-2 h-4 w-4' />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className='bg-gray-100 p-4 rounded mt-2 whitespace-pre-wrap font-mono text-sm'>
+                    {generatedEmail.split('\n').map((line, index) => (
+                      <React.Fragment key={index}>
+                        {line}
+                        <br />
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
       )}
     </main>
   );

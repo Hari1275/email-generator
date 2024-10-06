@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fastapi-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PINECONE_API_KEY
+        value: e5886319-f1b9-449e-918e-39e09e5a3314
+      - key: PINECONE_ENVIRONMENT
+        value: us-east-1
+      - key: USER_AGENT
+        value: Cold Email Generator SaaS (https://github.com/yourusername/your-repo)

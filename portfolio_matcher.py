@@ -3,7 +3,8 @@ from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone, ServerlessSpec
 import numpy as np
 
-pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
+# Use os.environ instead of os.getenv
+pc = Pinecone(api_key=os.environ['PINECONE_API_KEY'])
 index_name = "portfolio-projects"
 
 # Load pre-trained model

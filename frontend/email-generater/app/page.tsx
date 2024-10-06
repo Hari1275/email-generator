@@ -66,7 +66,7 @@ export default function Home() {
     setIsScrapingJobs(true);
     setScrapeError(null);
     try {
-      const response = await fetch('http://localhost:8000/scrape_job', {
+      const response = await fetch('http://localhost:9000/scrape_job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -93,7 +93,7 @@ export default function Home() {
     setIsGeneratingEmail(true);
     setEmailGenerationError(null);
     try {
-      const response = await fetch('http://localhost:8000/generate_email', {
+      const response = await fetch('http://localhost:9000/generate_email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

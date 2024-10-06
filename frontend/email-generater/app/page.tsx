@@ -12,7 +12,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import React from 'react';
-import { Loader2 } from 'lucide-react'; // Import the Loader2 icon
+import { Loader2, Copy, Check } from 'lucide-react'; // Import Copy and Check icons
+import copy from 'clipboard-copy';
 
 interface JobListing {
   Title: string;
@@ -44,6 +45,7 @@ export default function Home() {
   const [rawJobData, setRawJobData] = useState<RawJobData | null>(null);
   const [isScrapingJobs, setIsScrapingJobs] = useState(false);
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleScrapeJobs = async () => {
     setIsScrapingJobs(true);
@@ -95,6 +97,14 @@ export default function Home() {
       setGeneratedEmail('');
     } finally {
       setIsGeneratingEmail(false);
+    }
+  };
+
+  const handleCopyEmail = async () => {
+    if (generatedEmail) {
+      await copy(generatedEmail);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
 
@@ -223,7 +233,27 @@ export default function Home() {
             </div>
             {generatedEmail && (
               <div className='mt-4'>
-                <h3 className='text-lg font-semibold'>Generated Email:</h3>
+                <div className='flex justify-between items-center'>
+                  <h3 className='text-lg font-semibold'>Generated Email:</h3>
+                  <Button
+                    onClick={handleCopyEmail}
+                    variant='outline'
+                    size='sm'
+                    className='ml-2'
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check className='mr-2 h-4 w-4' />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className='mr-2 h-4 w-4' />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <div className='bg-gray-100 p-4 rounded mt-2 whitespace-pre-wrap font-mono text-sm'>
                   {generatedEmail.split('\n').map((line, index) => (
                     <React.Fragment key={index}>

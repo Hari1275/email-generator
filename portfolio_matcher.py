@@ -3,8 +3,6 @@ from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone, ServerlessSpec
 import numpy as np
 
-print(f"Pinecone API Key: {os.getenv('PINECONE_API_KEY')}")
-
 pc = Pinecone(api_key=os.getenv('PINECONE_API_KEY'))
 index_name = "portfolio-projects"
 

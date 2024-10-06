@@ -4,6 +4,10 @@ from portfolio_matcher import match_job_to_portfolio
 import re
 import requests
 from bs4 import BeautifulSoup
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 llm = ChatGroq(
     temperature=0.7,
@@ -36,12 +40,74 @@ def clean_content(content):
     return content.strip()
 
 def get_company_info(company_name):
-    # This is a placeholder function. In a real implementation, you'd use a more robust method to fetch company info.
-    url = f"https://en.wikipedia.org/wiki/{company_name.replace(' ', '_')}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    summary = soup.find('p').text if soup.find('p') else ""
-    return summary[:200]  # Return first 200 characters as a brief summary
+    logger.info(f"Attempting to get info for company: {company_name}")
+    
+    # Step 1: Try to get info from Wikipedia
+    try:
+        search_url = f"https://en.wikipedia.org/wiki/{company_name.replace(' ', '_')}"
+        logger.info(f"Searching Wikipedia URL: {search_url}")
+        response = requests.get(search_url, headers={'User-Agent': 'Mozilla/5.0'})
+        
+        if response.status_code != 200:
+            logger.warning(f"Wikipedia returned status code {response.status_code}")
+            raise Exception(f"Wikipedia request failed with status code {response.status_code}")
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Check if we're on a disambiguation page
+        if soup.find('table', id='disambigbox'):
+            logger.info("Found disambiguation page, searching for most relevant link")
+            relevant_link = soup.find('ul', class_='mw-disambig').find('a')
+            if relevant_link:
+                search_url = f"https://en.wikipedia.org{relevant_link['href']}"
+                logger.info(f"Following link to: {search_url}")
+                response = requests.get(search_url, headers={'User-Agent': 'Mozilla/5.0'})
+                soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Try to find the first paragraph of the Wikipedia article
+        first_paragraph = soup.find('div', class_='mw-parser-output').find('p', class_=lambda x: x != 'mw-empty-elt')
+        
+        if first_paragraph:
+            # Remove citations and other brackets
+            text = re.sub(r'\[.*?\]', '', first_paragraph.text)
+            logger.info(f"Successfully extracted Wikipedia info: {text[:100]}...")
+            return text[:200]  # Return first 200 characters
+        else:
+            logger.warning("No suitable paragraph found on Wikipedia page")
+            raise Exception("No suitable paragraph found on Wikipedia page")
+    except Exception as e:
+        logger.error(f"Error fetching from Wikipedia: {e}")
+
+    # Step 2: If Wikipedia fails, try to scrape the company's website
+    try:
+        logger.info(f"Attempting to scrape company website for: {company_name}")
+        search_url = f"https://www.google.com/search?q={company_name}+official+website"
+        response = requests.get(search_url, headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(response.content, 'html.parser')
+        company_url = soup.find('div', class_='yuRUbf').find('a')['href']
+        
+        logger.info(f"Found company URL: {company_url}")
+        company_response = requests.get(company_url, headers={'User-Agent': 'Mozilla/5.0'})
+        company_soup = BeautifulSoup(company_response.content, 'html.parser')
+        
+        # Try to find an 'About' section or similar
+        about_section = company_soup.find('div', string=re.compile('about', re.IGNORECASE))
+        if about_section:
+            info = about_section.find_next('p').text[:200]
+            logger.info(f"Found 'About' section: {info[:100]}...")
+            return info
+        else:
+            # If no 'About' section, just get the first paragraph
+            info = company_soup.find('p').text[:200]
+            logger.info(f"No 'About' section found, using first paragraph: {info[:100]}...")
+            return info
+    except Exception as e:
+        logger.error(f"Error scraping company website: {e}")
+
+    # Step 3: If all else fails, generate a generic description
+    logger.warning(f"Falling back to generic description for {company_name}")
+    return f"{company_name} is a company operating in its industry. " \
+           f"They are known for their products or services and are committed to delivering value to their customers."
 
 def generate_email(job_description, template_name="job_application"):
     job_data = eval(job_description)

@@ -35,7 +35,7 @@ def clean_content(content):
     
     return content.strip()
 
-def generate_email(job_description, template_name="job_application", **kwargs):
+def generate_email(job_description, template_name="job_application"):
     job_data = eval(job_description)
     company_name = job_data.get('Company', 'the company')
     matched_projects = match_job_to_portfolio(job_data['Description'])
@@ -46,11 +46,12 @@ def generate_email(job_description, template_name="job_application", **kwargs):
             """
             Write a concise and attractive cold job application email for the {role} position at {company}. 
             The email should:
-            1. Show enthusiasm for the role and company
-            2. Highlight 2-3 key skills or experiences relevant to the job
-            3. Express interest in an interview
-            4. Mention your willingness to provide additional information or references if needed
-            Keep the email under 200 words and make it engaging.
+            1. Start with an attention-grabbing opening related to the company or industry
+            2. Show enthusiasm for the role and company, mentioning a recent company achievement if possible
+            3. Highlight 2-3 key skills or experiences relevant to the job, with brief examples
+            4. Express interest in an interview, suggesting a specific time (e.g., "next Tuesday at 2 PM")
+            5. Close with a clear call-to-action
+            Keep the email under 200 words, use short paragraphs, and make it engaging and conversational.
             ### EMAIL (NO GREETING OR SIGNATURE):
             """
         )
@@ -59,11 +60,13 @@ def generate_email(job_description, template_name="job_application", **kwargs):
             """
             Write a concise and attractive business outreach email to {company} regarding their {role} position. 
             The email should:
-            1. Introduce TalentSync, an AI-powered recruitment platform
-            2. Highlight 2-3 key benefits of using TalentSync for hiring
-            3. Suggest a brief call to discuss how TalentSync can help with their hiring needs
-            4. Include the following portfolio links of successful placements: {portfolio_links}
-            Keep the email under 200 words and make it engaging.
+            1. Start with an attention-grabbing opening related to the company's hiring needs or industry challenges
+            2. Introduce TalentSync as an AI-powered recruitment platform that solves specific hiring problems
+            3. Highlight 2-3 key benefits of using TalentSync for hiring, with brief success stories or statistics
+            4. Suggest a specific time for a brief call (e.g., "this Thursday at 11 AM") to discuss how TalentSync can help with their hiring needs
+            5. Include the following portfolio links of successful placements: {portfolio_links}
+            6. Close with a clear call-to-action
+            Keep the email under 200 words, use short paragraphs, and make it engaging and conversational.
             ### EMAIL (NO GREETING OR SIGNATURE):
             """
         )

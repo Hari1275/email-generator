@@ -1,7 +1,6 @@
 streamlit
 langchain
 langchain-community
-beautifulsoup4
 requests
 langchain-groq
 fastapi
@@ -10,5 +9,3 @@ pinecone-client==3.0.0
 sentence-transformers
 scikit-learn
 numpy
-selenium
-beautifulsoup4

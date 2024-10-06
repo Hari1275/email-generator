@@ -1,11 +1,9 @@
 import streamlit as st
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from scraper import scrape_job_listings
-from api.email_generator import generate_email
-from portfolio_matcher import match_job_to_portfolio
-import uvicorn
 from pydantic import BaseModel
+from api.email_generator import generate_email
+from api.scraper import scrape_job_listings
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -25,56 +23,34 @@ app.add_middleware(
 class JobURL(BaseModel):
     url: str
 
-class JobDescription(BaseModel):
-    job_description: str
-
 class EmailRequest(BaseModel):
     job_description: str
     template_name: str = "job_application"
-    user_company: str = ""
-    recipient_name: str = ""
-    user_name: str = ""
-    user_position: str = ""
-    education_level: str = ""
-    university: str = ""
-    field_of_study: str = ""
 
 @app.post("/scrape_job")
 async def scrape_job(job_url: JobURL):
-    result = scrape_job_listings(job_url.url)
-    return result
+    try:
+        jobs = scrape_job_listings(job_url.url)
+        return jobs
+    except Exception as e:
+        logger.error(f"Error scraping jobs: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error scraping jobs")
 
 @app.post("/generate_email")
 async def generate_email_api(request: EmailRequest):
-    matched_projects = match_job_to_portfolio(request.job_description)
-    portfolio_links = "\n".join([f"- {url}" for url in matched_projects])
-    email = generate_email(
-        request.job_description,
-        template_name=request.template_name,
-        portfolio_links=portfolio_links if request.template_name == "business_outreach" else "",
-        company=request.user_company,
-        recipient_name=request.recipient_name,
-        user_name=request.user_name,
-        user_position=request.user_position,
-        user_company=request.user_company,
-        education_level=request.education_level,
-        university=request.university,
-        field_of_study=request.field_of_study
-    )
-    return {"email": email}
-
-@app.post("/match_portfolio")
-async def match_portfolio(job_desc: JobDescription):
     try:
-        matched_projects = match_job_to_portfolio(job_desc.job_description)
-        return {"matched_projects": matched_projects}
+        email = generate_email(
+            job_description=request.job_description,
+            template_name=request.template_name
+        )
+        return {"email": email}
     except Exception as e:
-        logger.error(f"Error matching portfolio: {str(e)}")
-        return {"error": "Unable to match portfolio at this time. Please try again later."}
+        logger.error(f"Error generating email: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error generating email")
 
 def run_fastapi():
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
 def streamlit_ui():
     st.title("Cold Email Generator API")
     endpoint = st.sidebar.selectbox("Select Endpoint", ["Scrape Job", "Generate Email", "Match Portfolio"])

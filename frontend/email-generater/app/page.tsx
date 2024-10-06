@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import React from 'react';
+import { Loader2 } from 'lucide-react'; // Import the Loader2 icon
 
 interface JobListing {
   Title: string;
@@ -25,14 +25,28 @@ interface JobListing {
   Company: string;
 }
 
+interface RawJobData {
+  role: string;
+  location: string;
+  employment_type: string;
+  experience: string;
+  skills: string;
+  responsibilities: string[];
+  description: string;
+}
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [jobListings, setJobListings] = useState<JobListing[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobListing | null>(null);
   const [generatedEmail, setGeneratedEmail] = useState('');
   const [emailType, setEmailType] = useState('job_application');
+  const [rawJobData, setRawJobData] = useState<RawJobData | null>(null);
+  const [isScrapingJobs, setIsScrapingJobs] = useState(false);
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
 
   const handleScrapeJobs = async () => {
+    setIsScrapingJobs(true);
     try {
       const response = await fetch('http://localhost:8000/scrape_job', {
         method: 'POST',
@@ -41,15 +55,27 @@ export default function Home() {
       });
       const data = await response.json();
       console.log('Scraped job data:', data);
-      setJobListings(data);
+      if (Array.isArray(data)) {
+        setJobListings(data);
+      } else if (data.jobs && Array.isArray(data.jobs)) {
+        setJobListings(data.jobs);
+      } else {
+        console.error('Unexpected data structure:', data);
+        setJobListings([]);
+      }
+      setRawJobData(data.raw_data || null);
     } catch (error) {
       console.error('Error scraping jobs:', error);
-      // TODO: Add error handling UI
+      setJobListings([]);
+      setRawJobData(null);
+    } finally {
+      setIsScrapingJobs(false);
     }
   };
 
   const handleGenerateEmail = async () => {
     if (!selectedJob) return;
+    setIsGeneratingEmail(true);
     try {
       const response = await fetch('http://localhost:8000/generate_email', {
         method: 'POST',
@@ -59,10 +85,16 @@ export default function Home() {
           template_name: emailType,
         }),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setGeneratedEmail(data.email);
     } catch (error) {
       console.error('Error generating email:', error);
+      setGeneratedEmail('');
+    } finally {
+      setIsGeneratingEmail(false);
     }
   };
 
@@ -82,7 +114,16 @@ export default function Home() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
-            <Button onClick={handleScrapeJobs}>Scrape Jobs</Button>
+            <Button onClick={handleScrapeJobs} disabled={isScrapingJobs}>
+              {isScrapingJobs ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Scraping...
+                </>
+              ) : (
+                'Scrape Jobs'
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -102,6 +143,42 @@ export default function Home() {
                 </li>
               ))}
             </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedJob && (
+        <Card className='mb-4'>
+          <CardHeader>
+            <CardTitle>{selectedJob.Title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-2'>
+              <p>
+                <strong>Location:</strong> {selectedJob.Location}
+              </p>
+              <p>
+                <strong>Employment Type:</strong>{' '}
+                {selectedJob['Employment Type']}
+              </p>
+              <p>
+                <strong>Experience:</strong> {selectedJob.Experience}
+              </p>
+              <p>
+                <strong>Skills:</strong> {selectedJob.Skills}
+              </p>
+              <p>
+                <strong>Description:</strong> {selectedJob.Description}
+              </p>
+              <div>
+                <strong>Responsibilities:</strong>
+                <ul className='list-disc pl-5 mt-2'>
+                  {selectedJob.Responsibilities.map((resp, index) => (
+                    <li key={index}>{resp}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -129,8 +206,19 @@ export default function Home() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleGenerateEmail} className='mt-4'>
-                Generate Email
+              <Button
+                onClick={handleGenerateEmail}
+                disabled={isGeneratingEmail}
+                className='mt-4'
+              >
+                {isGeneratingEmail ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Generating Email...
+                  </>
+                ) : (
+                  'Generate Email'
+                )}
               </Button>
             </div>
             {generatedEmail && (

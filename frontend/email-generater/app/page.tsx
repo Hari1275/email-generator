@@ -337,13 +337,13 @@ export default function Home() {
     <main className='min-h-screen bg-white p-8'>
       <div className='max-w-7xl mx-auto'>
         <h1 className='text-5xl font-extrabold text-center mb-12 text-gray-900 drop-shadow-lg'>
-          AI-Powered Cold Email Generator
+          AI-Powered Outreach Email Generator
         </h1>
 
         <Card className='mb-8 bg-gray-50 shadow-lg rounded-xl'>
           <CardHeader>
             <CardTitle className='text-3xl font-bold text-gray-900'>
-              Job Scraper
+              Intelligent Job Finder
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -363,12 +363,12 @@ export default function Home() {
                 {isScrapingJobs ? (
                   <>
                     <Loader2 className='mr-2 h-5 w-5 animate-spin' />
-                    Scraping...
+                    Finding...
                   </>
                 ) : (
                   <>
                     <Search className='mr-2 h-5 w-5' />
-                    Scrape Jobs
+                    Submit
                   </>
                 )}
               </Button>
@@ -553,9 +553,9 @@ export default function Home() {
                       <SelectItem value='job_application'>
                         Job Application
                       </SelectItem>
-                      <SelectItem value='business_outreach'>
+                      {/* <SelectItem value='business_outreach'>
                         Business Outreach
-                      </SelectItem>
+                      </SelectItem> */}
                     </SelectContent>
                   </Select>
                   <Button

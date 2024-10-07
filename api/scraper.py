@@ -133,5 +133,3 @@ def scrape_job_listings(url):
     except Exception as e:
         logger.error(f"Error scraping job listing: {str(e)}")
         return []
-
-# You can add more specific scraping functions for different website structures here

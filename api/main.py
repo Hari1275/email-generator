@@ -65,3 +65,8 @@ async def generate_email_api(request: EmailRequest):
 
 # Keep this line at the end
 app = app
+
+
+#  @app.get("/")
+#    async def root():
+#        return {"message": "Welcome to the AI-Powered Outreach Email Generator API"}
